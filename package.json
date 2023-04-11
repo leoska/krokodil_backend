@@ -1,0 +1,32 @@
+{
+  "name": "krokodil_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/leoska/krokodil_backend.git"
+  },
+  "author": "leoska",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/leoska/krokodil_backend/issues"
+  },
+  "homepage": "https://github.com/leoska/krokodil_backend#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "dependencies": {
+    "colors": "^1.4.0",
+    "express": "^4.18.2",
+    "fs-extra": "^11.1.1",
+    "moment": "^2.29.4",
+    "winston": "^3.8.2",
+    "ws": "^8.13.0"
+  }
+}
