@@ -15,7 +15,7 @@ export default class WebSocketClient {
     }
 
     async #message(data) {
-        this.#wsServer.sendOthers(data, this.#socket);
+        this.#wsServer.broadcast(data, this.#socket);
     }
 
     async send(msg) {
