@@ -35,7 +35,6 @@ export default class WebSocketServer {
     }
 
     async sendOthers(data, source) {
-        console.log("Send others");
         this.#clients.forEach((client, key) => {
             if (source === key)
                 return;
