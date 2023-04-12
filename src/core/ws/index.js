@@ -1,17 +1,19 @@
 import { WebSocketServer } from "ws";
 import logger from "../../utils/logger.js";
 import WebSocketClient from "./wsClient.js";
+import Server from "./../server.js"
 
 const DEFAULT_WS_HOST = "0.0.0.0";
 const DEFAULT_WS_PORT = 8081;
 
-export default class WSServer {
+export default class WSServer extends Server {
     #server = null;
     #clients = new Map();
     #options = {
         host: DEFAULT_WS_HOST,
         port: DEFAULT_WS_PORT,
     }
+    #buffer = [];
 
     /**
      * Базовый конструктор
@@ -53,7 +55,7 @@ export default class WSServer {
     }
 
     async stop() {
-        
+
     }
 
     /**

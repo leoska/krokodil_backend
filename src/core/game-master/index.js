@@ -6,7 +6,7 @@ const SESSION_BYTES_LENGTH = 16;
 export default class GameMaster {
     #gameSessions = new Map();
 
-    async start() {
+    async init() {
 
     }
 

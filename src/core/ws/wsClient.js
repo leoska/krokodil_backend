@@ -27,7 +27,7 @@ export default class WebSocketClient {
      * @param {*} data 
      */
     #message(data) {
-        this.#wsServer.sendOthers(data, this.#socket);
+        this.#wsServer.message(data, this.#socket);
     }
 
     /**
