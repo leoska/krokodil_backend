@@ -1,5 +1,4 @@
 import BaseApi from "../baseApi.js";
-import method from "../utils/method.js";
 
 export default class Ping extends BaseApi {
     /**

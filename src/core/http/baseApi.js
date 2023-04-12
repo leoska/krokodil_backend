@@ -1,4 +1,4 @@
-import timeout from "./utils/timeout.js";
+import timeout from "../../utils/timeout.js";
 
 const API_TIMEOUT = 20000;
 

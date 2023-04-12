@@ -1,4 +1,4 @@
-import ErrorApiMethod from "./../errorApiMethod.js";
+import ErrorApiMethod from "../core/http/errorApiMethod.js";
 
 /**
  * Декоратор для определения правильного API метода

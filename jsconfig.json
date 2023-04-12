@@ -6,9 +6,9 @@
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "paths": {
-            "modules/*": ["./src/modules/*"],
-            "settings/*": ["./settings/*"],
-            "services/*" : ["./src/services/*"]
+            "cmd/*": ["./src/cmd/*"],
+            "core/*": ["./src/core/*"],
+            "utils/*" : ["./src/utils/*"]
         }
     },
     "exclude": ["node_modules"]

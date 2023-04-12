@@ -1,27 +1,13 @@
-import app from "./src/app.js";
-import timeout from "./src/utils/timeout.js";
 import logger from "./src/utils/logger.js";
 
-const EXIT_MAX_WAIT = 10000; // 10 secs
-
-process.once('SIGINT', async () => {
-    try {
-        await Promise.race([
-            app.stop(),
-            timeout(EXIT_MAX_WAIT),
-        ]);
-
-        logger.info(`Application successfully stopped.`);
-        process.exit(0);
-    } catch(e) {
-        logger.error(`Application can't stop correct: ${e}`);
-        process.exit(1);
-    }
-});
-
+const ARGV_APPLICATION_CMD = process.argv[2];
+const DEFAULT_CONFIG_ENV = 'develop';
+const ARGV_CONFIG_ENV = process.argv[3] || DEFAULT_CONFIG_ENV;
 
 try {
-    await app.init();
+    logger.info(`Try to start [${ARGV_APPLICATION_CMD}] cmd application`);
+    const cmdApplication = (await import(`./src/cmd/${ARGV_APPLICATION_CMD}/index.js`)).default;
+    await cmdApplication(ARGV_CONFIG_ENV);
 } catch(e) {
     logger.error(`Application can't start correct: ${e.stack}`);
     process.exit(1);
