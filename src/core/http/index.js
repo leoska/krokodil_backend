@@ -154,7 +154,7 @@ export default class HttpServer {
 
         // Listen http-server
         this.#server.listen(options, () => {
-            logger.info(`[HTTP-Server] Successfully initialized and started API http-server on ${options.host}:${options.port}`);
+            logger.info(`[HTTP-Server] Successfully started API http-server on ${options.host}:${options.port}`);
         });
     }
 

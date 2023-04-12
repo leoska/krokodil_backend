@@ -2,7 +2,7 @@ import app from "./../../core/app.js";
 import timeout from "./../../utils/timeout.js";
 import logger from "./../../utils/logger.js";
 import http from "./../../core/http/index.js";
-import ws from "./../../core/ws/index.js";
+import gm from "../../core/game-master/index.js";
 
 const EXIT_MAX_WAIT = 10000; // 10 secs
 
@@ -31,7 +31,7 @@ process.once('SIGINT', async () => {
  */
 export default async function main() {
     await app.init([
+        gm,
         http,
-        ws,
     ]);
 }

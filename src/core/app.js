@@ -1,7 +1,5 @@
 import logger from "../utils/logger.js";
 
-const DEFAULT_CONFIG_ENV = 'develop';
-const ARGV_CONFIG_ENV = process.argv[2] || DEFAULT_CONFIG_ENV;
 const _instance = Symbol("_instance");
 
 class Application {
