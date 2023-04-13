@@ -1,9 +1,11 @@
 import GameRoom from "./../../core/game-room/index.js";
 import logger from "./../../utils/logger.js";
 import createEnum from "./../../utils/enum.js";
+import fs from "node:fs";
 
 import eventsMap from "./eventsMap.json" assert { type: "json" };
 
+const AMOUNT_PLAYERS_SESSION = 2; // 4
 
 const DEFAULT_TICK_RATE = 15;
 const DEFAULT_GAME_STATE = createEnum([
@@ -15,13 +17,28 @@ const DEFAULT_GAME_STATE = createEnum([
     "FINISH",
 ]);
 
+const WORDS = (fs.readFileSync("words.txt", "utf8")).split('\n');
+
+function getRandomWord() {
+    return WORDS[Math.floor(Math.random() * WORDS.length)];
+}
+
+function getRandomPlayer(players) {
+    const ids = Object.keys(players);
+    return ids[Math.floor(Math.random() * ids.length)]
+}
+
 export default class KrokodilRoom extends GameRoom {
     gameState = DEFAULT_GAME_STATE.WAITING;
+    amountPlayers = 0;
+    word = "";
+    playerDrawing = 0;
+    players = {};
 
     constructor(server = null, roomId = "", ...args) {
         super(server, roomId, DEFAULT_TICK_RATE, eventsMap);
 
-        server.on("disconnect", (clientId) => );
+        server.on("disconnect", (clientId) => this.#disconnectClient(clientId));
 
         this.on("connected", (...args) => this.#connected(...args));
         this.on("loaded", (...args) => this.#loaded(...args));
@@ -36,7 +53,14 @@ export default class KrokodilRoom extends GameRoom {
      * @param {Client} client
      */
     #connected([data, stamp, client]) {
-        
+        this.players[client.id] = client;
+
+        if (++this.amountPlayers >= AMOUNT_PLAYERS_SESSION) {
+            if (this.gameState === DEFAULT_GAME_STATE.WAITING) {
+                this.#selectWordState();
+                
+            }
+        }
     }
 
     /**
@@ -52,12 +76,40 @@ export default class KrokodilRoom extends GameRoom {
 
     /**
      * 
+     * @private
      * @param {Buffer} data
      * @param {Number} stamp
      * @param {Client} client
+     * @this KrokodilRoom
+     * @returns {void}
      */
     #disconnect([data, stamp, client]) {
         // TODO: пока ничего не делаем, используем другой слушатель
+    }
+
+    /**
+     * Клиент отключился от комнаты
+     * 
+     * @private
+     * @param {Number} clientId 
+     */
+    #disconnectClient(clientId) {
+        --amountPlayers;
+
+        
+    }
+
+    /**
+     * Переводим комнату в состояние выбора слова
+     * 
+     * @private
+     */
+    #selectWordState() {
+        gameState = DEFAULT_GAME_STATE.SELECT_WORD;
+
+        this.word = getRandomWord();
+        this.playerDrawing = getRandomPlayer(this.players);
+
     }
 
     /**

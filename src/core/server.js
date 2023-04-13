@@ -54,6 +54,8 @@ export default class Server extends EventEmitter {
      * @returns {Promise<void>}
      */
     async stop() {
+        
+
         this.removeAllListeners();
     }
 

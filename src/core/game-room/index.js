@@ -40,7 +40,7 @@ export default class GameRoom extends EventEmitter {
         this.#tickTime = SECOND / tickRate;
         this.#eventsMap = {...eventsMap};
 
-        this.#server = serverModule;
+        this.#server = server;
         this.#roomId = roomId;
     }
 
@@ -196,10 +196,12 @@ export default class GameRoom extends EventEmitter {
      * 
      * @async
      * @public
+     * @param {Buffer} data
+     * @param {Boolean} [ignoreSelf]
      * @this GameRoom
      * @returns {Promise<void>}
      */
-    async sendToAll() {
+    async sendToAll(data, ignoreSelf = false) {
 
     }
 
