@@ -1,6 +1,7 @@
 import logger from "./../../utils/logger.js";
+import Client from "./../client.js";
 
-export default class WebSocketClient {
+export default class WebSocketClient extends Client {
     #socket = null;
     #wsServer = null;
 

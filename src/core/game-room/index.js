@@ -23,6 +23,7 @@ export default class GameRoom extends EventEmitter {
     #tickTime = SECOND / DEFAULT_TICK_RATE;
     #intervalIdEventLoop = 0;
     #roomId = "";
+    #eventsMap = null;
 
     /**
      * Базовый конструктор
@@ -33,6 +34,7 @@ export default class GameRoom extends EventEmitter {
     constructor(tickRate = DEFAULT_TICK_RATE, eventsMap = {}, server = null, roomId = "") {
         this.#tickRate = tickRate;
         this.#tickTime = SECOND / tickRate;
+        this.#eventsMap = {...eventsMap};
 
         this.#server = serverModule;
         this.#roomId = roomId;
@@ -51,7 +53,7 @@ export default class GameRoom extends EventEmitter {
         try {
             this.firstTick();
         } catch(e) {
-
+            logger.error(`[Game-Room] Something went wrong on first tick\n${e.stack}`);
         }
         
         this.#state = GAME_ROOM_STATE.PLAYING;
@@ -92,9 +94,32 @@ export default class GameRoom extends EventEmitter {
         if (!this.#server || typeof(this.#server.receiveBuffer) !== "function")
             return;
 
-        for (const event of this.#server.receiveBuffer()) {
-            try {
+        /**
+         * @typedef {Object} PlayerEvent
+         * @property {Buffer} data - binary data of event
+         * @property {(net.Socket|EventEmitter|*)} socket - socket of source event
+         * @property {Number} event - first 4 byte big-endian int of [data] 
+         * @property {Number} stamp - stamp of register event
+         */
 
+        const events = this.eventNames();
+
+        /** * @type {PlayerEvent} */
+        for (const { data, socket, event, stamp } of this.#server.receiveBuffer()) {
+            try {
+                const eventName = this.#eventsMap[event];
+                
+                if (!eventName) {
+                    logger.error(`[Game-Room] Event with id [${event}] not registered in eventMaps!`);
+                    continue;
+                }
+
+                if (!events.includes(eventName)) {
+                    logger.warn(`[Game-Room] Event with name [${eventName}] has not registered listeners.`);
+                    continue;
+                }
+
+                this.emit(eventName, [data, stamp, socket]);
             } catch(e) {
                 logger.error(`[Game-Room] Game room with id: [${this.#roomId}] an error has occured on dispatch input messages\n${e.stack}`);
             }
@@ -103,10 +128,16 @@ export default class GameRoom extends EventEmitter {
 
     /**
      * Метод отсылает все события клиентам, которые зарегистрировал bufferEvents
+     * 
+     * @private
+     * @this GameRoom
+     * @returns {void}
      */
     #dispathBufferEvents() {
         if (!this.#server || typeof(this.#server.receiveBuffer) !== "function")
             return;
+
+        
     }
 
     /**
@@ -137,8 +168,31 @@ export default class GameRoom extends EventEmitter {
     async stop() {
         // Stoped event loop
         clearInterval(this.#intervalIdEventLoop);
+
+        // Closed Server
+        await this.#server.stop();
+
+        this.#state = GAME_ROOM_STATE.CLOSED;
     }
 
+    /**
+     * Отправка сообщения на клиент
+     * 
+     * @async
+     * @public
+     * @this GameRoom
+     * @returns {Promise<void>}
+     */
+    async send() {
+
+    }
+
+    /**
+     * Отправка всем сообщения
+     */
+    async sendToAll() {
+
+    }
 
     /**
      * Первый "кадр" игровой комнаты.

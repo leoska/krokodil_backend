@@ -2,7 +2,17 @@ import { EventEmitter } from "node:events";
 
 export default class Server extends EventEmitter {
     #buffer = [];
-    #clients = new WeakMap();
+    #clients = new Map();
+
+    constructor() {
+        super();
+
+        this.on("disconnect", (clientId) => this.disconnect(clientId));
+    }
+
+    #getFreeClientId() {
+
+    }
 
     async init() {
 
@@ -35,4 +45,15 @@ export default class Server extends EventEmitter {
     receiveBuffer() {
         return this.#buffer.splice(0, this.#buffer.length);
     }
+
+    /**
+     * Клиент отключился
+     * 
+     * @public
+     * @param {Number} client 
+     */
+    disconnect(clientId) {
+
+    }
+
 }
