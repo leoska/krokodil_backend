@@ -17,6 +17,7 @@ export default class WSServer extends Server {
      * Базовый конструктор
      * 
      * @param {Object} options 
+     * @this WSServer
      */
     constructor(options) {
         super();
@@ -28,20 +29,11 @@ export default class WSServer extends Server {
     }
 
     /**
-     * Новое подключение по веб-сокету
-     * 
-     * @private
-     * @param {ws.WebSocket} socket
-     */
-    #connection(socket) {
-        logger.debug(`[WS-Server] Client [${socket.url}] joined.`);
-    }
-
-    /**
      * Инициализация веб-сокет сервера
      * 
      * @async
      * @public
+     * @override
      * @this WSServer
      * @returns {Promise<void>}
      */
@@ -54,9 +46,9 @@ export default class WSServer extends Server {
     }
 
     /**
-     * 
+     * Остановка сервера
      */
     async stop() {
-
+        await super.stop();
     }
 }

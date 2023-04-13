@@ -5,6 +5,12 @@ export default class Server extends EventEmitter {
     #buffer = [];
     #clients = new Map();
 
+    /**
+     * Базовый конструктора сервера
+     * 
+     * @constructor
+     * @this Server
+     */
     constructor() {
         super();
 
@@ -54,7 +60,17 @@ export default class Server extends EventEmitter {
      * @returns {Promise<void>}
      */
     async stop() {
-        
+        this.removeAllListeners("disconnect");
+
+        const tasks = [];
+        this.#clients.forEach((client) => {
+            tasks.push(client.close().error((err) => {
+                const code = err.code ? `code: ${err.code}` : '';
+                logger.error(`[${this.constructor.name}] Client an error has occured on close connection. ${code}\n${err.stack}`);
+            }));
+        });
+
+        await Promise.all(tasks);
 
         this.removeAllListeners();
     }
@@ -104,9 +120,9 @@ export default class Server extends EventEmitter {
      * 
      * @public
      * @param {(net.Socket|EventEmitter|*)} socket 
-     * @param {Client} client
+     * @param {Client} clientClass
      */
-    connection(socket, client) {
+    connection(socket, clientClass) {
         const id = this.#getFreeClientId();
 
         if (this.#clients.has(id)) {
@@ -114,7 +130,7 @@ export default class Server extends EventEmitter {
             throw new Error(`[${this.constructor.name}] Generated free id has already exists in client map!`);
         }
 
-        const client = new client(id, socket, this);
+        const client = new clientClass(id, socket, this);
 
         this.#clients.set(id, client);
 

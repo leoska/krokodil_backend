@@ -34,6 +34,7 @@ export default class KrokodilRoom extends GameRoom {
     word = "";
     playerDrawing = 0;
     players = {};
+    chat = [];
 
     constructor(server = null, roomId = "", ...args) {
         super(server, roomId, DEFAULT_TICK_RATE, eventsMap);
@@ -64,7 +65,7 @@ export default class KrokodilRoom extends GameRoom {
     }
 
     /**
-     *  Готовность к игре
+     * Готовность к игре
      * 
      * @param {Buffer} data
      * @param {Number} stamp
@@ -75,6 +76,7 @@ export default class KrokodilRoom extends GameRoom {
     }
 
     /**
+     * Клиент отключился от комнаты
      * 
      * @private
      * @param {Buffer} data
@@ -88,27 +90,44 @@ export default class KrokodilRoom extends GameRoom {
     }
 
     /**
-     * Клиент отключился от комнаты
+     * Клиент отключился от комнаты (завязано на сервере)
      * 
      * @private
      * @param {Number} clientId 
+     * @returns {void}
      */
     #disconnectClient(clientId) {
         --amountPlayers;
 
-        
+        // Остановка игры, рисующий игрок вышел
+        if (this.playerDrawing === clientId) {
+            this.#finishState();
+        }
     }
 
     /**
      * Переводим комнату в состояние выбора слова
      * 
      * @private
+     * @this KrokodilRoom
+     * @returns {void}
      */
     #selectWordState() {
         gameState = DEFAULT_GAME_STATE.SELECT_WORD;
 
+        // Выбираем случайное слово и случайного рисующего игрока
         this.word = getRandomWord();
         this.playerDrawing = getRandomPlayer(this.players);
+    }
+
+    /**
+     * Переводим комнату в состония освобождение ресурсов
+     * 
+     * @private
+     * @this KrokodilRoom
+     * @returns {void}
+     */
+    #finishState() {
 
     }
 
