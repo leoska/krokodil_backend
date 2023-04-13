@@ -7,11 +7,12 @@ export default class Client extends EventEmitter {
     #id = 0;
 
     /**
+     * Базовый конструктор клиента
      * 
      * @constructor
      * @param {Number} id 
      * @param {(net.Socket|EventEmitter|*)} socket 
-     * @param {(net.Socket|EventEmitter|*)} server 
+     * @param {Server} server 
      */
     constructor(id = 0, socket = null, server = null) {
         super();
@@ -20,17 +21,44 @@ export default class Client extends EventEmitter {
         this.#socket = socket;
         this.#server = server;
 
+        socket.on("data", (...args) => this.data(...args));
         socket.on("error", (...args) => this.error(...args));
         socket.once("close", (...args) => this.close(...args));
     }
 
     /**
+     * Геттер на id
+     * 
+     * @getter
+     * @this Client
+     * @returns {Number}
+     */
+    get id() {
+        return this.#id;
+    }
+
+    /**
      * Отправка данных клиенту по сокету
      * 
-     * @param {*} data 
+     * @public
+     * @param {(Buffer|String)} data 
+     * @this Client
+     * @returns {void}
      */
-    async send(data) {
+    send(data) {
         this.#socket.send(data);
+    }
+
+    /**
+     * Получили данные от клиента
+     * 
+     * @public
+     * @param {(Buffer|String|ArrayBuffer|*)} data 
+     * @this Client
+     * @returns {void}
+     */
+    data(...args) {
+        this.#server.emit("clientData", this, ...args);
     }
 
     /**
@@ -63,6 +91,8 @@ export default class Client extends EventEmitter {
         } catch(e) {
             code = e.code ? `code: ${e.code}` : '';
             logger.error(`Client an error has occured on close connection. ${code}\n${e.stack}`);
+        } finally {
+            this.removeAllListeners();
         }
     }
 }

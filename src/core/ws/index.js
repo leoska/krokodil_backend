@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import logger from "../../utils/logger.js";
-import WebSocketClient from "./wsClient.js";
+import WSClient from "./wsClient.js";
 import Server from "./../server.js"
 
 const DEFAULT_WS_HOST = "0.0.0.0";
@@ -8,12 +8,10 @@ const DEFAULT_WS_PORT = 8081;
 
 export default class WSServer extends Server {
     #server = null;
-    #clients = new Map();
     #options = {
         host: DEFAULT_WS_HOST,
         port: DEFAULT_WS_PORT,
     }
-    #buffer = [];
 
     /**
      * Базовый конструктор
@@ -21,6 +19,8 @@ export default class WSServer extends Server {
      * @param {Object} options 
      */
     constructor(options) {
+        super();
+
         this.#options = {
             ...this.#options,
             ...options,
@@ -35,7 +35,6 @@ export default class WSServer extends Server {
      */
     #connection(socket) {
         logger.debug(`[WS-Server] Client [${socket.url}] joined.`);
-        this.#clients.set(ws, new WebSocketClient(socket, this));
     }
 
     /**
@@ -51,61 +50,13 @@ export default class WSServer extends Server {
             logger.info(`[WS-Server] Successfully started ws-server on ${this.#options.host}:${this.#options.port}`);
         });
 
-        this.#server.on("connection", (ws) => this.#connection(ws));
+        this.#server.on("connection", (socket) => this.connection(socket, WSClient));
     }
 
+    /**
+     * 
+     */
     async stop() {
 
-    }
-
-    /**
-     * Отправка сообщения всем клиентам
-     * 
-     * @public
-     * @param {Buffer} data 
-     * @this WSServer
-     * @returns {void}
-     */
-    broadcast(data) {
-        this.#clients.forEach((client) => {
-            client.send(data);
-        });
-    }
-
-    /**
-     * Отправка сообщения всем клиентам, кроме источника
-     * 
-     * @public
-     * @param {Buffer} data 
-     * @param {ws.WebSocket} source 
-     * @this WSServer
-     * @returns {void}
-     */
-    sendOthers(data, source) {
-        this.#clients.forEach((client, key) => {
-            if (source === key)
-                return;
-            
-            client.send(data);
-        });
-    }
-
-    /**
-     * Отключение игрока
-     * 
-     * @public
-     * @param {ws.WebSocket} socket 
-     * @param {Number} [code]
-     * @param {String} [reason]
-     * @this WSServer
-     * @returns {void}
-     */
-    disconnect(socket, code = 0, reason = "") {
-        if (socket.readyState < 2){
-            socket.close(code, reason);
-        }
-        
-        this.#clients.delete(socket);
-        logger.debug(`[WS-Server] Client [${socket.url}] has disconnected.`);
     }
 }

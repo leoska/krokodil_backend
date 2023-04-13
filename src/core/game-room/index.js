@@ -29,9 +29,13 @@ export default class GameRoom extends EventEmitter {
      * Базовый конструктор
      * 
      * @constructor
-     * 
+     * @param {Server} server
+     * @param {String} roomId
+     * @param {Number} tickRate
+     * @param {Object} eventsMap
+     * @this GameRoom
      */
-    constructor(tickRate = DEFAULT_TICK_RATE, eventsMap = {}, server = null, roomId = "") {
+    constructor(server = null, roomId = "", tickRate = DEFAULT_TICK_RATE, eventsMap = {}) {
         this.#tickRate = tickRate;
         this.#tickTime = SECOND / tickRate;
         this.#eventsMap = {...eventsMap};
@@ -53,7 +57,7 @@ export default class GameRoom extends EventEmitter {
         try {
             this.firstTick();
         } catch(e) {
-            logger.error(`[Game-Room] Something went wrong on first tick\n${e.stack}`);
+            logger.error(`[${this.constructor.name}] Something went wrong on first tick\n${e.stack}`);
         }
         
         this.#state = GAME_ROOM_STATE.PLAYING;
@@ -68,18 +72,18 @@ export default class GameRoom extends EventEmitter {
      * @this GameRoom
      * @returns {void}
      */
-    #eventLoop() {
+    async #eventLoop() {
         try {
             this.#dispatchMessageQueue();
 
-            this.tick();
+            await this.tick();
 
             this.#dispathBufferEvents();
 
             // TODO: добавить замеры выполнения по времени тика и выводить алерт, если тик выполняется больше определенного времени
             // TODO: возможно стоит тормозить выполнения следующего тика, пока не выполнен текущий
         } catch(e) {
-            logger.error(`[Game-Room] Game room with id: [${this.#roomId}] an error has occured in event loop\n${e.stack}`);
+            logger.error(`[${this.constructor.name}] Game room with id: [${this.#roomId}] an error has occured in event loop\n${e.stack}`);
         }
     }
 
@@ -110,18 +114,18 @@ export default class GameRoom extends EventEmitter {
                 const eventName = this.#eventsMap[event];
                 
                 if (!eventName) {
-                    logger.error(`[Game-Room] Event with id [${event}] not registered in eventMaps!`);
+                    logger.error(`[${this.constructor.name}] Event with id [${event}] not registered in eventMaps!`);
                     continue;
                 }
 
                 if (!events.includes(eventName)) {
-                    logger.warn(`[Game-Room] Event with name [${eventName}] has not registered listeners.`);
+                    logger.warn(`[${this.constructor.name}] Event with name [${eventName}] has not registered listeners.`);
                     continue;
                 }
 
                 this.emit(eventName, [data, stamp, socket]);
             } catch(e) {
-                logger.error(`[Game-Room] Game room with id: [${this.#roomId}] an error has occured on dispatch input messages\n${e.stack}`);
+                logger.error(`[${this.constructor.name}] Game room with id: [${this.#roomId}] an error has occured on dispatch input messages\n${e.stack}`);
             }
         }
     }
@@ -189,6 +193,11 @@ export default class GameRoom extends EventEmitter {
 
     /**
      * Отправка всем сообщения
+     * 
+     * @async
+     * @public
+     * @this GameRoom
+     * @returns {Promise<void>}
      */
     async sendToAll() {
 

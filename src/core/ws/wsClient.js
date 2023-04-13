@@ -1,7 +1,7 @@
 import logger from "./../../utils/logger.js";
 import Client from "./../client.js";
 
-export default class WebSocketClient extends Client {
+export default class WSClient extends Client {
     #socket = null;
     #wsServer = null;
 
@@ -16,7 +16,6 @@ export default class WebSocketClient extends Client {
         ws.on("error", (err) => this.#error(err));
         ws.once("close", (...args) => server.disconnect(ws, ...args))
 
-
         this.#socket = ws;
         this.#wsServer = server;
     }
@@ -28,14 +27,14 @@ export default class WebSocketClient extends Client {
      * @param {*} data 
      */
     #message(data) {
-        this.#wsServer.message(data, this.#socket);
+        this.#wsServer.message(data, this);
     }
 
     /**
      * Методы, вызываемый, когда веб-сокет клиент словил ошибку
      * 
      * @private
-     * @this WebSocketClient
+     * @this WSClient
      * @param {Error} err 
      */
     #error(err) {
