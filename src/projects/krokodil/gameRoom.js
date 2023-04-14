@@ -2,6 +2,7 @@ import GameRoom from "./../../core/game-room/index.js";
 import logger from "./../../utils/logger.js";
 import createEnum from "./../../utils/enum.js";
 import fs from "node:fs";
+import path from "node:path";
 
 import eventsMap from "./eventsMap.json" assert { type: "json" };
 
@@ -17,7 +18,8 @@ const DEFAULT_GAME_STATE = createEnum([
     "FINISH",
 ]);
 
-const WORDS = (fs.readFileSync("words.txt", "utf8")).split('\n');
+const wordsPath = path.join(path.resolve(), "src", "projects", "krokodil", "words.txt");
+const WORDS = (fs.readFileSync(wordsPath, "utf8")).split('\n');
 
 function getRandomWord() {
     return WORDS[Math.floor(Math.random() * WORDS.length)];
@@ -53,9 +55,9 @@ export default class KrokodilRoom extends GameRoom {
         server.on("disconnect", (clientId) => this.#disconnectClient(clientId));
 
         // Game Events
-        this.on("draw",  (...args) => this.#connected(...args));
-        this.on("chat",  (...args) => this.#connected(...args));
-        this.on("selectWord",  (...args) => this.#connected(...args));
+        this.on("draw",  (...args) => this.#draw(...args));
+        this.on("chat",  (...args) => this.#chat(...args));
+        this.on("selectWord",  (...args) => this.#selectWord(...args));
     }
 
     /**
@@ -92,8 +94,48 @@ export default class KrokodilRoom extends GameRoom {
         // TODO: пока ничего не делаем, используем другой слушатель
     }
 
+    /**
+     * Событие отрисовки в комнате
+     * 
+     * @private
+     * @param {Object} data
+     * @param {Number} stamp
+     * @param {Client} client
+     * @this KrokodilRoom
+     * @returns {void}
+     */
     #draw([data, stamp, client]) {
+        // if (this.playerDrawing == client.id) {
+            this.sendToAll("draw", data, [client.id]);
+        // }
+    }
+
+    /**
+     * Событие чата
+     * 
+     * @private
+     * @param {Object} data
+     * @param {Number} stamp
+     * @param {Client} client
+     * @this KrokodilRoom
+     * @returns {void}
+     */
+    #chat([data, stamp, client]) {
         
+    }
+
+    /**
+     * Событие выбора слова
+     * 
+     * @private
+     * @param {Object} data
+     * @param {Number} stamp
+     * @param {Client} client
+     * @this KrokodilRoom
+     * @returns {void}
+     */
+    #selectWord([data, stamp, client]) {
+
     }
 
     /**
@@ -104,7 +146,7 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #disconnectClient(clientId) {
-        --amountPlayers;
+        --this.amountPlayers;
 
         // Остановка игры, рисующий игрок вышел
         if (this.playerDrawing === clientId) {

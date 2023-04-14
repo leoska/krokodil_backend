@@ -1,4 +1,5 @@
 import { EventEmitter } from "node:events";
+import logger from "./../utils/logger.js";
 import Client from "./client.js";
 import Protocol from "./protocol/index.js";
 
@@ -53,7 +54,7 @@ export default class Server extends EventEmitter {
             return 1;
 
         let result = 0;
-        for (const id of this.#clients.keys().sort()) {
+        for (const id of Array.from(this.#clients.keys()).sort()) {
             if (id !== ++result)
                 return result;
         }
@@ -87,7 +88,7 @@ export default class Server extends EventEmitter {
 
         const tasks = [];
         this.#clients.forEach((client) => {
-            tasks.push(client.close().error((err) => {
+            tasks.push(client.close().catch((err) => {
                 const code = err.code ? `code: ${err.code}` : '';
                 logger.error(`[${this.constructor.name}] Client an error has occured on close connection. ${code}\n${err.stack}`);
             }));
@@ -107,13 +108,12 @@ export default class Server extends EventEmitter {
      * @returns {void}
      */
     clientData(client, buffer) {
-        const [ data, event ] = this.constructor.serializator.readFromBuffer(buffer);
+        const packet = this.constructor.serializator.readFromBuffer(buffer);
 
         this.#buffer.push({
-            data,
-            client,
-            event,
+            data: packet,
             stamp: Date.now(),
+            client,
         });
     }
 

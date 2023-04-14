@@ -28,8 +28,8 @@ export default class GameMaster {
      * @setter
      * @param {GameRoom} module
      */
-    static set gameRoomFactory(factory) {
-        GameMaster.gameRoomFactory = module;
+    static set newGameRoom(module) {
+        GameMaster.gameRoomModule = module;
     }
 
     /**
@@ -77,7 +77,7 @@ export default class GameMaster {
         const tasks = [];
 
         this.#gameSessions.forEach((gameRoom) => {
-            tasks.push(gameRoom.stop().error((err) => {
+            tasks.push(gameRoom.stop().catch((err) => {
                 const code = err.code ? `code: ${err.code}` : '';
                 logger.error(`[${this.constructor.name}] GameRoom an error has occured on stop event. ${code}\n${err.stack}`);
             }));

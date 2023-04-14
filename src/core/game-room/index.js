@@ -18,7 +18,7 @@ const GAME_ROOM_STATE = createEnum([
 
 export default class GameRoom extends EventEmitter {
     #tickRate = DEFAULT_TICK_RATE;
-    #bufferEvents = [];
+    #bufferEvents = {};
     #server = null;
     #state = GAME_ROOM_STATE.CREATED;
     #tickTime = SECOND / DEFAULT_TICK_RATE;
@@ -38,6 +38,8 @@ export default class GameRoom extends EventEmitter {
      * @this GameRoom
      */
     constructor(server = null, roomId = "", tickRate = DEFAULT_TICK_RATE, eventsMap = {}) {
+        super();
+        
         this.#tickRate = tickRate;
         this.#tickTime = SECOND / tickRate;
         this.#eventsMap = {...eventsMap};
@@ -129,29 +131,41 @@ export default class GameRoom extends EventEmitter {
         /**
          * @typedef {Object} PlayerEvent
          * @property {Buffer} data - binary data of event
-         * @property {(net.Socket|EventEmitter|*)} socket - socket of source event
+         * @property {Client} client - socket of source event
          * @property {Number} event - first 4 byte big-endian int of [data] 
          * @property {Number} stamp - stamp of register event
          */
 
         const events = this.eventNames();
 
+        // TODO: разбить на методы, код выглядит сложным
+
         /** * @type {PlayerEvent} */
-        for (const { data, socket, event, stamp } of this.#server.receiveBuffer()) {
+        for (const packet of this.#server.receiveBuffer()) {
             try {
-                const eventName = this.#eventsMap[event];
-                
-                if (!eventName) {
-                    logger.error(`[${this.constructor.name}] Event with id [${event}] not registered in eventMaps!`);
-                    continue;
+                if (!Array.isArray(packet.data.events)) {
+                    throw new Error(`[${this.constructor.name}] Received packet field 'events' expected a array! Type: [${typeof(packet.data.events)}]`);
                 }
 
-                if (!events.includes(eventName)) {
-                    logger.warn(`[${this.constructor.name}] Event with name [${eventName}] has not registered listeners.`);
-                    continue;
+                for (const { data, eventCode, stamp } of packet.data.events) {
+                    try {
+                        const eventName = this.#eventsMap[eventCode];
+                        
+                        if (!eventName) {
+                            logger.error(`[${this.constructor.name}] Event with id [${eventCode}] not registered in eventMaps!`);
+                            continue;
+                        }
+        
+                        if (!events.includes(eventName)) {
+                            logger.warn(`[${this.constructor.name}] Event with name [${eventName}] has not registered listeners.`);
+                            continue;
+                        }
+        
+                        this.emit(eventName, [JSON.parse(data), stamp, packet.client]);
+                    } catch(e) {
+                        logger.error(`[${this.constructor.name}] Game room with id: [${this.#roomId}] an error has occured on dispatch input messages\n${e.stack}`);
+                    }
                 }
-
-                this.emit(eventName, [data, stamp, socket]);
             } catch(e) {
                 logger.error(`[${this.constructor.name}] Game room with id: [${this.#roomId}] an error has occured on dispatch input messages\n${e.stack}`);
             }
@@ -169,11 +183,23 @@ export default class GameRoom extends EventEmitter {
         if (!this.#server || typeof(this.#server.receiveBuffer) !== "function")
             return;
 
-        for (const { event, data, receiver, stamp } of this.#bufferEvents.splice(0, this.#bufferEvents.length)) {
-            this.#server.sendToClient({
-                event,
-                data
-            }, receiver);
+        for (const [ receiver, buffer ] of Object.entries(this.#bufferEvents)) {
+
+            if (buffer.length < 1)
+                continue;
+
+            const dataToSend = Array(buffer.length);
+            let i = 0;
+
+            for (const { event, data, stamp } of buffer.splice(0, buffer.length)) {
+                dataToSend[i] = {
+                    eventCode: event,
+                    // FIXME: исправить двойную сериализацию data
+                    data: JSON.stringify(data),
+                };
+            }
+
+            this.#server.sendToClient({ events: dataToSend }, receiver);
         }
     }
 
@@ -224,10 +250,9 @@ export default class GameRoom extends EventEmitter {
      * @returns {Promise<void>}
      */
     async send(event, data, clientId) {
-        this.#bufferEvents.push({
+        this.#bufferEvents[clientId].push({
             event: this.#eventsMapT[event],
             data,
-            receiver: clientId,
             stamp: Date.now(),
         });
     }
@@ -248,10 +273,9 @@ export default class GameRoom extends EventEmitter {
             if (ignoreIds.includes(clientId))
                 continue;
             
-            this.#bufferEvents.push({
+            this.#bufferEvents[clientId].push({
                 event: this.#eventsMapT[event],
                 data,
-                receiver: clientId,
                 stamp: Date.now(),
             });
         }

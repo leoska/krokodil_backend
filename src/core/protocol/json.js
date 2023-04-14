@@ -11,8 +11,7 @@ export default class ProtocolJSON extends Protocol {
      * @returns {[Object, Number]}
      */
     static readFromBuffer(buf) {
-        const obj = JSON.parse(buf.toString('utf8'));
-        return [ obj.data, obj.event ];
+        return JSON.parse(buf.toString('utf8'));
     }
 
     /**
