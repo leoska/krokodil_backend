@@ -1,7 +1,6 @@
 {
     "1": "connected",
-    "2": "ready",
-    "3": "disconnect",
+    "2": "disconnect",
     "20": "draw",
     "21": "chat",
     "22": "selectWord"

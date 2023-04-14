@@ -1,5 +1,6 @@
 import { EventEmitter } from "node:events";
 import Client from "./client.js";
+import Protocol from "./protocol/index.js";
 
 export default class Server extends EventEmitter {
     #buffer = [];
@@ -16,6 +17,28 @@ export default class Server extends EventEmitter {
 
         this.on("disconnect", (clientId) => this.disconnect(clientId));
         this.on("clientData", (...args) => this.clientData(...args));
+    }
+
+    /**
+     * Сериализатор пакетов
+     * 
+     * @static
+     * @getter
+     * @returns {Protocol}
+     */
+    static get serializator() {
+        return Protocol;
+    }
+
+    /**
+     * Возвращает массив идентификаторов игроков
+     * 
+     * @public
+     * @getter
+     * @returns {Array<Number>}
+     */
+    get clientIds() {
+        return this.#clients.keys();
     }
 
     /**
@@ -80,14 +103,16 @@ export default class Server extends EventEmitter {
      * 
      * @public
      * @param {Client} client
-     * @param {(Buffer|String|ArrayBuffer|*)} data 
+     * @param {(Buffer|String|ArrayBuffer|*)} buffer 
      * @returns {void}
      */
-    clientData(client, data) {
+    clientData(client, buffer) {
+        const [ data, event ] = this.constructor.serializator.readFromBuffer(buffer);
+
         this.#buffer.push({
             data,
             client,
-            event: data.readInt32BE(0),
+            event,
             stamp: Date.now(),
         });
     }
@@ -141,13 +166,14 @@ export default class Server extends EventEmitter {
      * Отправка сообщения всем клиентам
      * 
      * @public
-     * @param {Buffer} data 
+     * @param {*} data 
      * @this Server
      * @returns {void}
      */
     broadcast(data) {
+        const buf = this.constructor.serializator.writeToBuffer(data);
         this.#clients.forEach((client) => {
-            client.send(data);
+            client.send(buf);
         });
     }
 
@@ -155,17 +181,19 @@ export default class Server extends EventEmitter {
      * Отправка сообщения всем клиентам, кроме источника
      * 
      * @public
-     * @param {Buffer} data 
+     * @param {*} data 
      * @param {Number} sourceId 
      * @this Server
      * @returns {void}
      */
     sendOthers(data, sourceId) {
+        const buf = this.constructor.serializator.writeToBuffer(data);
+
         this.#clients.forEach((client, key) => {
             if (sourceId === key)
                 return;
             
-            client.send(data);
+            client.send(buf);
         });
     }
 
@@ -173,12 +201,27 @@ export default class Server extends EventEmitter {
      * Отправка сообщения конкретному клиенту
      * 
      * @public
-     * @param {Buffer} data 
+     * @param {*} data 
      * @param {Number} clientId 
      * @this Server
      * @returns {void}
      */
     sendToClient(data, clientId) {
+        if (!this.#clients.has(clientId)) {
+            throw new Error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
+        }
 
+        const client = this.#clients.get(clientId);
+        client.send(this.constructor.serializator.writeToBuffer(data));
+    }
+
+    /**
+     * Проверка на существование клиента
+     * 
+     * 
+     * @param {*} clientId 
+     */
+    existsClient(clientId) {
+        return this.#clients.has(clientId);
     }
 }

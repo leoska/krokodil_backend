@@ -1,6 +1,7 @@
 import logger from "./../../utils/logger.js";
 import createEnum from "./../../utils/enum.js";
 import { EventEmitter } from "node:events";
+import { Buffer } from "node:buffer";
 
 const DEFAULT_TICK_RATE = 33;
 const SECOND = 1000;
@@ -24,6 +25,7 @@ export default class GameRoom extends EventEmitter {
     #intervalIdEventLoop = 0;
     #roomId = "";
     #eventsMap = null;
+    #eventsMapT = {};
 
     /**
      * Базовый конструктор
@@ -40,8 +42,34 @@ export default class GameRoom extends EventEmitter {
         this.#tickTime = SECOND / tickRate;
         this.#eventsMap = {...eventsMap};
 
+        for (const [key, value] of Object.entries(eventsMap)) {
+            this.#eventsMapT[value] = key;
+        }
+
         this.#server = server;
         this.#roomId = roomId;
+    }
+
+    /**
+     * Возвращает идентификатор комнаты
+     * 
+     * @getter
+     * @this GameRoom
+     * @returns {String}
+     */
+    get id() {
+        return this.#roomId;
+    }
+
+    /**
+     * Возвращает массив идентификаторов игроков у сервера
+     * 
+     * @getter
+     * @this GameRoom
+     * @returns {Array<Number>}
+     */
+    get clientIds() {
+        return this.#server.clientIds;
     }
 
     /**
@@ -141,7 +169,12 @@ export default class GameRoom extends EventEmitter {
         if (!this.#server || typeof(this.#server.receiveBuffer) !== "function")
             return;
 
-        
+        for (const { event, data, receiver, stamp } of this.#bufferEvents.splice(0, this.#bufferEvents.length)) {
+            this.#server.sendToClient({
+                event,
+                data
+            }, receiver);
+        }
     }
 
     /**
@@ -184,11 +217,19 @@ export default class GameRoom extends EventEmitter {
      * 
      * @async
      * @public
+     * @param {String} event
+     * @param {*} data
+     * @param {Number} clientId
      * @this GameRoom
      * @returns {Promise<void>}
      */
-    async send() {
-
+    async send(event, data, clientId) {
+        this.#bufferEvents.push({
+            event: this.#eventsMapT[event],
+            data,
+            receiver: clientId,
+            stamp: Date.now(),
+        });
     }
 
     /**
@@ -196,13 +237,24 @@ export default class GameRoom extends EventEmitter {
      * 
      * @async
      * @public
-     * @param {Buffer} data
-     * @param {Boolean} [ignoreSelf]
+     * @param {String} event
+     * @param {*} data
+     * @param {Array<Number>} [ignoreIds]
      * @this GameRoom
      * @returns {Promise<void>}
      */
-    async sendToAll(data, ignoreSelf = false) {
-
+    async sendToAll(event, data, ignoreIds = []) {
+        for (const clientId of this.clientIds) {
+            if (ignoreIds.includes(clientId))
+                continue;
+            
+            this.#bufferEvents.push({
+                event: this.#eventsMapT[event],
+                data,
+                receiver: clientId,
+                stamp: Date.now(),
+            });
+        }
     }
 
     /**

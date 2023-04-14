@@ -36,20 +36,32 @@ export default class KrokodilRoom extends GameRoom {
     players = {};
     chat = [];
 
+    /**
+     * Конструктор игровой комнаты крокодила
+     * 
+     * @constructor
+     * @param {Server} server 
+     * @param {String} roomId 
+     * @param  {...any} args 
+     */
     constructor(server = null, roomId = "", ...args) {
         super(server, roomId, DEFAULT_TICK_RATE, eventsMap);
 
+        // System Events
+        this.on("connected", (...args) => this.#connected(...args));
+        this.on("disconnect", (...args) => this.#disconnect(...args));
         server.on("disconnect", (clientId) => this.#disconnectClient(clientId));
 
-        this.on("connected", (...args) => this.#connected(...args));
-        this.on("loaded", (...args) => this.#loaded(...args));
-        this.on("disconnect", (...args) => this.#disconnect(...args));
+        // Game Events
+        this.on("draw",  (...args) => this.#connected(...args));
+        this.on("chat",  (...args) => this.#connected(...args));
+        this.on("selectWord",  (...args) => this.#connected(...args));
     }
 
     /**
      * Событие подключение игрока
      * 
-     * @param {Buffer} data
+     * @param {Object} data
      * @param {Number} stamp
      * @param {Client} client
      */
@@ -62,24 +74,15 @@ export default class KrokodilRoom extends GameRoom {
                 
             }
         }
-    }
 
-    /**
-     * Готовность к игре
-     * 
-     * @param {Buffer} data
-     * @param {Number} stamp
-     * @param {Client} client
-     */
-    #loaded([data, stamp, client]) {
-
+        logger.debug(data);
     }
 
     /**
      * Клиент отключился от комнаты
      * 
      * @private
-     * @param {Buffer} data
+     * @param {Object} data
      * @param {Number} stamp
      * @param {Client} client
      * @this KrokodilRoom
@@ -87,6 +90,10 @@ export default class KrokodilRoom extends GameRoom {
      */
     #disconnect([data, stamp, client]) {
         // TODO: пока ничего не делаем, используем другой слушатель
+    }
+
+    #draw([data, stamp, client]) {
+        
     }
 
     /**
@@ -138,7 +145,7 @@ export default class KrokodilRoom extends GameRoom {
      * 
      */
     async firstTick() {
-
+        logger.info(`[KrokodilRoom (${this.id})] Started playing. Waiting for players.`);
     }
     
     /**
