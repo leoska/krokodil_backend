@@ -192,14 +192,14 @@ export default class GameRoom extends EventEmitter {
             let i = 0;
 
             for (const { event, data, stamp } of buffer.splice(0, buffer.length)) {
-                dataToSend[i] = {
+                dataToSend[i++] = {
                     eventCode: event,
                     // FIXME: исправить двойную сериализацию data
                     data: JSON.stringify(data),
                 };
             }
 
-            this.#server.sendToClient({ events: dataToSend }, receiver);
+            this.#server.sendToClient({ events: dataToSend }, Number(receiver));
         }
     }
 
@@ -272,6 +272,9 @@ export default class GameRoom extends EventEmitter {
         for (const clientId of this.clientIds) {
             if (ignoreIds.includes(clientId))
                 continue;
+            
+            if (!this.#bufferEvents[clientId])
+                this.#bufferEvents[clientId] = [];
             
             this.#bufferEvents[clientId].push({
                 event: this.#eventsMapT[event],
