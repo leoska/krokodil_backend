@@ -132,7 +132,7 @@ export default class HttpServer {
      * @returns {Promise<void>}
      */
     async #initApi() {
-        for(const pathDir of pathDirs) {
+        for(const pathDir of this.constructor.apiDirs) {
             const pathToRead = path.join(__dirname, 'src', pathDir);
             const resultApies = await readDir(pathToRead);
             Object.assign(this.#api, resultApies);

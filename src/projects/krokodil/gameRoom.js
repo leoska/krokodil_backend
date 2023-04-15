@@ -37,6 +37,7 @@ export default class KrokodilRoom extends GameRoom {
     playerDrawing = 0;
     players = {};
     chat = [];
+    canvas = null;
     // TODO: добавить массив пикселей картинки
 
     /**
@@ -101,16 +102,16 @@ export default class KrokodilRoom extends GameRoom {
      * @param {Client} client
      * @returns {void}
      */
-    #disconnect(clientId) {
+    #disconnect(client) {
         --this.amountPlayers;
 
         delete this.players[client.id];
 
         // Остановка игры, рисующий игрок вышел
-        if (this.playerDrawing === clientId) {
+        if (this.playerDrawing === client.id) {
             this.#finishState();
         } else {
-            this.sendToAll("disconnect", { id: clientId }, [clientId])
+            this.sendToAll("disconnect", { id: client.id }, [client.id])
         }
     }
 
