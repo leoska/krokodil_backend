@@ -41,25 +41,24 @@ function getFileStats(pathFile) {
  * Функция сканирования папки
  *
  * @param {String} pathDir
- * @param {filterInitApiCallback} filterCb
  * @this _initApi
  * @returns {Promise<(Error|Object.<string, BaseApi>)>}
  */
-function readDir(pathDir, filterCb) {
+function readDir(pathDir) {
     return new Promise((resolve, reject) => {
-        const pathToRead = path.join(__dirname, 'src', 'core', 'http', 'api', pathDir);
         const apies = {};
 
-        fsExtra.readdir(pathToRead, async (err, files) => {
+        fsExtra.readdir(pathDir, async (err, files) => {
             if (err)
                 reject(err);
 
             for (const file of files) {
-                const filePath = path.join(pathToRead, file);
+                const filePath = path.join(pathDir, file);
 
                 const stats = await getFileStats(filePath);
                 if (stats.isDirectory()) {
-                    await readDir(path.join(pathDir, file));
+                    const dirApies = await readDir(path.join(pathDir, file));
+                    Object.assign(apies, dirApies);
                 } else {
                     if (!(/^[^_].*\.js$/.test(file)))
                         continue;
@@ -70,21 +69,19 @@ function readDir(pathDir, filterCb) {
                     const apiModule = (await import(filePath)).default;
                     
                     if (apiModule.isApi && apiModule.isApi()) {
-                        if (typeof(filterCb) === "function" && !filterCb(apiName, apiModule)) {
-                            continue;
+                        if (apies[apiName]) {
+                            reject(new Error(`[HTTP-Server] API ${apiName} is already initialized!`));
+                            return;
                         }
-
-                        if (apies[apiName])
-                            throw new Error(`[HTTP-Server] API ${apiName} is already initialized!`);
 
                         logger.info(`[HTTP-Server] API ${apiModule.name} successfully initialized.`);
                         apies[apiName] = apiModule;
                     }
                 }
             }
-            
-            resolve(apies);
-        })
+        });
+
+        resolve(apies);
     });
 }
 
@@ -92,7 +89,11 @@ function readDir(pathDir, filterCb) {
 export default class HttpServer {
     #server = null;
     #app = null;
-    #api = null;
+    #api = {};
+    static apiDirs = [
+        // Default path for core http module apies
+        path.join('core', 'http', 'api'),
+    ];
 
     /**
      * @constructor
@@ -100,6 +101,26 @@ export default class HttpServer {
      */
     constructor() {
         this.#app = express();
+    }
+
+    /**
+     * Добавление директорию для инициализации api модулей для http сервера
+     * Путь начинается с папки src\/* и должен заканчиваться на папку *\/api
+     * 
+     * @static
+     * @public
+     * @param {String} apiPath
+     * @returns {void}
+     */
+    static addWalkDirApi(apiPath) {
+        if (!apiPath)
+            return;
+
+        const dirs = apiPath.split("/");
+        if (dirs[dirs.length - 1] !== "api")
+            return;
+
+        this.constructor.apiDirs.push(apiPath);
     }
 
     /**
@@ -111,7 +132,11 @@ export default class HttpServer {
      * @returns {Promise<void>}
      */
     async #initApi() {
-        this.#api = await readDir('');
+        for(const pathDir of pathDirs) {
+            const pathToRead = path.join(__dirname, 'src', pathDir);
+            const resultApies = await readDir(pathToRead);
+            Object.assign(this.#api, resultApies);
+        }
     }
 
     /**
@@ -180,19 +205,5 @@ export default class HttpServer {
                 reject(e);
             }
         });
-    }
-
-    /**
-     * Коллбэк фильтра загрузки модулей апи методов из папки ./api
-     * 
-     * @callback filterInitApiCallback
-     * @public
-     * @param {String} name 
-     * @param {BaseApi} api 
-     * @this HttpServer
-     * @returns {Boolean}
-     */
-    filterInitApi(name, api) {
-        return true;
     }
 }

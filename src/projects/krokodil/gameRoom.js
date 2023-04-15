@@ -37,6 +37,7 @@ export default class KrokodilRoom extends GameRoom {
     playerDrawing = 0;
     players = {};
     chat = [];
+    // TODO: добавить массив пикселей картинки
 
     /**
      * Конструктор игровой комнаты крокодила
@@ -49,15 +50,29 @@ export default class KrokodilRoom extends GameRoom {
     constructor(server = null, roomId = "", ...args) {
         super(server, roomId, DEFAULT_TICK_RATE, eventsMap);
 
-        // System Events
-        this.on("connected", (...args) => this.#connected(...args));
-        this.on("disconnect", (...args) => this.#disconnect(...args));
-        server.on("disconnect", (clientId) => this.#disconnectClient(clientId));
+        // Server Events
+        server.on("disconnect", (client) => this.#disconnect(client));
 
         // Game Events
+        this.on("connected", (...args) => this.#connected(...args));
+        this.on("disconnectForce", (...args) => this.#disconnectForce(...args));       
         this.on("draw",  (...args) => this.#draw(...args));
         this.on("chat",  (...args) => this.#chat(...args));
         this.on("selectWord",  (...args) => this.#selectWord(...args));
+    }
+
+    /**
+     * Клиент отключился от комнаты (намеренно)
+     * 
+     * @private
+     * @param {Object} data
+     * @param {Number} stamp
+     * @param {Client} client
+     * @this KrokodilRoom
+     * @returns {void}
+     */
+    #disconnectForce([data, stamp, client]) {
+        // TODO: пока ничего не делаем, используем другой слушатель
     }
 
     /**
@@ -76,23 +91,29 @@ export default class KrokodilRoom extends GameRoom {
                 
             }
         }
-
-        logger.debug(data);
     }
 
     /**
-     * Клиент отключился от комнаты
+     * Клиент отключился от комнаты (завязано на сервере). 
+     * Возможно потеря подключения, т.е. даем возможность вернуться в игру.
      * 
      * @private
-     * @param {Object} data
-     * @param {Number} stamp
      * @param {Client} client
-     * @this KrokodilRoom
      * @returns {void}
      */
-    #disconnect([data, stamp, client]) {
-        // TODO: пока ничего не делаем, используем другой слушатель
+    #disconnect(clientId) {
+        --this.amountPlayers;
+
+        delete this.players[client.id];
+
+        // Остановка игры, рисующий игрок вышел
+        if (this.playerDrawing === clientId) {
+            this.#finishState();
+        } else {
+            this.sendToAll("disconnect", { id: clientId }, [clientId])
+        }
     }
+
 
     /**
      * Событие отрисовки в комнате
@@ -121,7 +142,7 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #chat([data, stamp, client]) {
-        
+        chat.push();
     }
 
     /**
@@ -136,22 +157,6 @@ export default class KrokodilRoom extends GameRoom {
      */
     #selectWord([data, stamp, client]) {
 
-    }
-
-    /**
-     * Клиент отключился от комнаты (завязано на сервере)
-     * 
-     * @private
-     * @param {Number} clientId 
-     * @returns {void}
-     */
-    #disconnectClient(clientId) {
-        --this.amountPlayers;
-
-        // Остановка игры, рисующий игрок вышел
-        if (this.playerDrawing === clientId) {
-            this.#finishState();
-        }
     }
 
     /**

@@ -16,7 +16,7 @@ export default class Server extends EventEmitter {
     constructor() {
         super();
 
-        this.on("disconnect", (clientId) => this.disconnect(clientId));
+        this.on("disconnectClient", (clientId) => this.#disconnectClient(clientId));
         this.on("clientData", (...args) => this.clientData(...args));
     }
 
@@ -40,6 +40,26 @@ export default class Server extends EventEmitter {
      */
     get clientIds() {
         return this.#clients.keys();
+    }
+
+    /**
+     * Отключение клиента
+     * 
+     * @private
+     * @param {Number} clientId 
+     * @this Server
+     * @returns {void}
+     */
+    #disconnectClient(clientId) {
+        if (!this.#clients.has(clientId)) {
+            throw new Error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
+        }
+
+        const client = this.#clients.get(clientId);
+        this.emit("disconnect", client);
+
+        logger.info(`[${this.constructor.name}] Client with id: [${clientId}] has disconnected.`);
+        this.#clients.delete(clientId);
     }
 
     /**
@@ -126,18 +146,6 @@ export default class Server extends EventEmitter {
      */
     receiveBuffer() {
         return this.#buffer.splice(0, this.#buffer.length);
-    }
-
-    /**
-     * Клиент отключился
-     * 
-     * @public
-     * @param {Number} client 
-     * @returns {void}
-     */
-    disconnect(clientId) {
-        logger.info(`[${this.constructor.name}] Client with id: [${clientId}] has disconnected.`);
-        this.#clients.delete(clientId);
     }
 
     /**

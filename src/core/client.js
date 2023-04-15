@@ -82,7 +82,7 @@ export default class Client extends EventEmitter {
      * @returns {void}
      */
     close(...args) {
-        this.#server.emit("disconnect", this.#id);
+        this.#server.emit("disconnectClient", this.#id);
 
         try {
             if (typeof(this.#socket.close) === "function") {
