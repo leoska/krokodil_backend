@@ -39,7 +39,12 @@ export default class Server extends EventEmitter {
      * @returns {Array<Number>}
      */
     get clientIds() {
-        return this.#clients.keys();
+        const ids = [];
+
+        for (const id of this.#clients.keys())
+            ids.push(id);
+
+        return ids;
     }
 
     /**
@@ -216,7 +221,8 @@ export default class Server extends EventEmitter {
      */
     sendToClient(data, clientId) {
         if (!this.#clients.has(clientId)) {
-            throw new Error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
+            // throw new Error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
+            logger.error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
         }
 
         const client = this.#clients.get(clientId);

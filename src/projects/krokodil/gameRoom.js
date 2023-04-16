@@ -25,6 +25,20 @@ function getRandomWord() {
     return WORDS[Math.floor(Math.random() * WORDS.length)];
 }
 
+function getRandomWords() {
+    const result = [];
+    let word = "";
+
+    while(result.length < 3) {
+        word = getRandomWord();
+
+        if (!result.includes(word))
+            result.push(word);
+    }
+
+    return result;
+}
+
 function getRandomPlayer(players) {
     const ids = Object.keys(players);
     return ids[Math.floor(Math.random() * ids.length)]
@@ -35,6 +49,7 @@ export default class KrokodilRoom extends GameRoom {
     amountPlayers = 0;
     word = "";
     playerDrawing = 0;
+    randomWords = null;
     players = {};
     chat = [];
     canvas = null;
@@ -59,7 +74,7 @@ export default class KrokodilRoom extends GameRoom {
         this.on("disconnectForce", (...args) => this.#disconnectForce(...args));       
         this.on("draw",  (...args) => this.#draw(...args));
         this.on("chat",  (...args) => this.#chat(...args));
-        this.on("selectWord",  (...args) => this.#selectWord(...args));
+        // this.on("selectWord",  (...args) => this.#selectWord(...args));
     }
 
     /**
@@ -90,7 +105,21 @@ export default class KrokodilRoom extends GameRoom {
             if (this.gameState === DEFAULT_GAME_STATE.WAITING) {
                 this.#selectWordState();
                 
+            } else if (this.gameState === DEFAULT_GAME_STATE.PLAYING) {
+                this.send("chat", { chatString: `Игра уже идет, ждем следующую.` }, client.id);
+                this.send("start", {}, client.id);
             }
+        } else {
+            this.send("chat", { chatString: `Ждем игроков` }, client.id);
+        }
+    }
+
+    #resetRoom() {
+        if (this.amountPlayers >= AMOUNT_PLAYERS_SESSION) {
+            this.#selectWordState();
+        } else {
+            this.gameState = DEFAULT_GAME_STATE.WAITING;
+            this.sendToAll("chat", { chatString: `Ждем игроков` }, []);
         }
     }
 
@@ -103,15 +132,14 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #disconnect(client) {
-        --this.amountPlayers;
-
         delete this.players[client.id];
 
         // Остановка игры, рисующий игрок вышел
-        if (this.playerDrawing === client.id) {
+        if (this.playerDrawing === client.id || --this.amountPlayers < 2) {
             this.#finishState();
         } else {
-            this.sendToAll("disconnect", { id: client.id }, [client.id])
+            // TODO: потом доделать отключение клиента
+            // this.sendToAll("disconnect", { id: client.id }, [client.id])
         }
     }
 
@@ -143,7 +171,15 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #chat([data, stamp, client]) {
-        chat.push();
+        let msg;
+        if (data.chatString.trim().toLowerCase() === this.word.trim().toLowerCase()) {
+            msg = `Игрок #${client.id} угадал слово ${this.word}!`;
+            this.#finishState(client.id);
+        } else {
+            msg = `#${client.id}: ${data.chatString}`;
+        }
+        this.sendToAll("chat", { chatString: msg });
+        logger.debug(`[KrokodilRoom (${this.id})] message: ${msg}`);
     }
 
     /**
@@ -157,7 +193,24 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #selectWord([data, stamp, client]) {
+        if (this.gameState !== DEFAULT_GAME_STATE.SELECT_WORD) {
+            logger.error(`[KrokodilRoom (${this.id})] Try to call event selectWord in gameState: [${this.gameState}]`);
+            return;
+        }
 
+        if (client.id !== this.playerDrawing) {
+            logger.error(`[KrokodilRoom (${this.id})] Try to call event selectWord for non drawer player! playerDrawing: [${this.playerDrawing}], caller: [${client.id}]`);
+            return;
+        }
+
+        if (data.wordId < 0 || data.wordId > 2) {
+            logger.error(`[KrokodilRoom (${this.id})] Try to call event selectWord with incorrect wordId! playerDrawing: [${this.playerDrawing}], wordId: [${data.wordId}]`);
+            return;
+        }
+
+        this.word = this.randomWords[data.wordId].trim().toLowerCase();
+
+        this.randomWords = null;
     }
 
     /**
@@ -168,22 +221,36 @@ export default class KrokodilRoom extends GameRoom {
      * @returns {void}
      */
     #selectWordState() {
-        gameState = DEFAULT_GAME_STATE.SELECT_WORD;
+        this.gameState = DEFAULT_GAME_STATE.SELECT_WORD;
 
         // Выбираем случайное слово и случайного рисующего игрока
+        // this.randomWords = getRandomWords();
         this.word = getRandomWord();
         this.playerDrawing = getRandomPlayer(this.players);
+
+        for (const id of Object.keys(this.players)) {
+            setTimeout(() => this.send("selectWord", { draw: Number(id) === Number(this.playerDrawing), word: this.word }, Number(id)), 50);
+        }
+
+        this.gameState = DEFAULT_GAME_STATE.PLAYING;
     }
 
     /**
      * Переводим комнату в состония освобождение ресурсов
      * 
      * @private
+     * @param {Number} [winnerId]
      * @this KrokodilRoom
      * @returns {void}
      */
-    #finishState() {
+    #finishState(winnerId = 0) {
+        this.gameState = DEFAULT_GAME_STATE.FINISH;
+        this.sendToAll("finish", { winner: false }, [winnerId]);
 
+        if (winnerId)
+            this.send("finish", { winner: true }, winnerId);
+
+        setTimeout(() => this.#resetRoom(), 5000);
     }
 
     /**

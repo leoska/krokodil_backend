@@ -183,7 +183,14 @@ export default class GameRoom extends EventEmitter {
         if (!this.#server || typeof(this.#server.receiveBuffer) !== "function")
             return;
 
+        const userExistsIds = this.#server.clientIds;
+        const idsForRemove = [];
+
         for (const [ receiver, buffer ] of Object.entries(this.#bufferEvents)) {
+            if (!userExistsIds.includes(Number(receiver))) {
+                idsForRemove.push(Number(receiver));
+                continue;
+            }
 
             if (buffer.length < 1)
                 continue;
@@ -193,7 +200,7 @@ export default class GameRoom extends EventEmitter {
 
             for (const { event, data, stamp } of buffer.splice(0, buffer.length)) {
                 dataToSend[i++] = {
-                    eventCode: event,
+                    eventCode: Number(event),
                     // FIXME: исправить двойную сериализацию data
                     data: JSON.stringify(data),
                 };
@@ -201,6 +208,9 @@ export default class GameRoom extends EventEmitter {
 
             this.#server.sendToClient({ events: dataToSend }, Number(receiver));
         }
+
+        for (const idForRemove of idsForRemove)
+            delete this.#bufferEvents[idForRemove];
     }
 
     /**
@@ -250,6 +260,9 @@ export default class GameRoom extends EventEmitter {
      * @returns {Promise<void>}
      */
     async send(event, data, clientId) {
+        if (!this.#bufferEvents[clientId])
+            this.#bufferEvents[clientId] = [];
+
         this.#bufferEvents[clientId].push({
             event: this.#eventsMapT[event],
             data,

@@ -3,5 +3,7 @@
     "2": "disconnect",
     "20": "draw",
     "21": "chat",
-    "22": "selectWord"
+    "22": "selectWord",
+    "30": "start",
+    "31": "finish"
 }

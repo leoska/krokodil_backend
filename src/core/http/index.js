@@ -154,6 +154,9 @@ export default class HttpServer {
 
         // TODO: написать шаблонизатор для генерации динамики
         this.#app.use("/", express.static("public"));
+
+        // Роутинг GET-методов
+        // this._app.get("/api/:apiName.json", (req, res) => this.#responseHandler(req, res, 'GET'));
     }
 
     /**
