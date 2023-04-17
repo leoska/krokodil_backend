@@ -135,7 +135,7 @@ export default class KrokodilRoom extends GameRoom {
         delete this.players[client.id];
 
         // Остановка игры, рисующий игрок вышел
-        if (this.playerDrawing === client.id || --this.amountPlayers < 2) {
+        if (this.playerDrawing === client.id || (--this.amountPlayers < 2 && this.gameState === DEFAULT_GAME_STATE.PLAYING)) {
             this.#finishState();
         } else {
             // TODO: потом доделать отключение клиента
