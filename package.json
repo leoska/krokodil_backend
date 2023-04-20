@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon index.js gaming-server"
+    "watch-gaming": "nodemon index.js gaming-server",
+    "watch-internal": "nodemon index.js internal-server"
   },
   "repository": {
     "type": "git",
@@ -26,11 +27,14 @@
     "@grpc/grpc-js": "^1.8.13",
     "@grpc/proto-loader": "^0.7.6",
     "colors": "^1.4.0",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
     "google-protobuf": "^3.21.2",
+    "gulp": "^4.0.2",
     "lodash": "^4.17.21",
     "moment": "^2.29.4",
+    "pug": "^3.0.2",
     "winston": "^3.8.2",
     "ws": "^8.13.0"
   }

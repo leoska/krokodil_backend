@@ -1,0 +1,12 @@
+node_modules
+clickhouse
+postgres
+logs
+nginx
+
+npm-debug.log
+.gitignore
+buildImage.sh
+docker-compose.yml
+LICENSE
+README.md

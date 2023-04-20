@@ -1,10 +1,15 @@
 import logger from "../utils/logger.js";
+import config from "../config/index.js";
 
 const _instance = Symbol("_instance");
 
 class Application {
     #modules = new Map(); // Инициализированные экземпляры модулей
     #appAlreadyStopping = false;
+
+    constructor() {
+        logger.info(`Application created with [${config.NODE_ENV}] env`);
+    }
 
     /**
      * Статический геттер на экземпляр приложения
@@ -68,10 +73,10 @@ class Application {
             this.#appAlreadyStopping = true;
             logger.warn('Received SIGINT signal! Application try to stop.');
 
-            this.#modules.forEach((module) => tasks.push(module.stop().then(() => {
-                logger.info(`Module [${module.name}] successfully stopped.`);
+            this.#modules.forEach((module, key) => tasks.push(module.stop().then(() => {
+                logger.info(`Module [${key}] successfully stopped.`);
             }, (e) => {
-                logger.error(`Module [${module.name}] can't stop correct: ${e.stack}`);
+                logger.error(`Module [${key}] can't stop correct: ${e.stack}`);
             })));
 
             await Promise.all(tasks);

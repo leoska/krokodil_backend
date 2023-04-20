@@ -1,4 +1,4 @@
-# Import container with nodejs v14
+# Import container with nodejs v18
 FROM node:18.14.2-bullseye
 
 # Install PM2 Globally in Container
