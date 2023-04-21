@@ -23,4 +23,4 @@ EXPOSE 8080
 EXPOSE 25565-27632
 
 # Run server
-CMD [ "npm", "run", "watch" ]
+CMD [ "npm", "run", "watch-gaming" ]

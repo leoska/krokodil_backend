@@ -32,8 +32,6 @@ class Application {
      * @returns {Promise<void>}
      */
     async init(modules) {
-        const tasks = [];
-
         for (const module of modules) {
             logger.info(`Start initialize module [${module.name}]`);
 
@@ -47,12 +45,10 @@ class Application {
                 enumerable: false,
             });
 
-            tasks.push(instanceOfModule.init().then(() => {
-                logger.info(`Module [${module.name}] successfully initialized`);
-            }));
-        }
+            await instanceOfModule.init();
 
-        await Promise.all(tasks);
+            logger.info(`Module [${module.name}] successfully initialized`);
+        }
     }
 
     /**

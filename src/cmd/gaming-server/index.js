@@ -5,6 +5,7 @@ import http from "./../../core/http/index.js";
 import gm from "./../../core/game-master/index.js";
 import WSServer from "./../../core/ws/index.js";
 import KrokodilRoom from "./../../projects/krokodil/gameRoom.js";
+import ConsulModule from "./../../core/consul/index.js";
 
 const EXIT_MAX_WAIT = 10000; // 10 secs
 
@@ -38,6 +39,7 @@ export default async function main() {
     }
 
     await app.init([
+        ConsulModule,
         gm,
         http,
     ]);

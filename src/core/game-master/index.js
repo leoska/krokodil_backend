@@ -62,7 +62,7 @@ export default class GameMaster {
      * @returns {Promise<void>}
      */
     async init() {
-        // 
+        // TODO: добавить возможность старта некоторого кол-ва игровых сессий для быстрой инициализации игровых серверов
     }
 
     /**
