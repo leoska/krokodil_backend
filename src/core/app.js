@@ -63,22 +63,20 @@ class Application {
         if (this.#appAlreadyStopping)
             return;
 
-        const tasks = [];
+        this.#appAlreadyStopping = true;
+        logger.warn('Received SIGINT signal! Application try to stop.');
 
-        try {
-            this.#appAlreadyStopping = true;
-            logger.warn('Received SIGINT signal! Application try to stop.');
+        for (const module of this.#modules.items()) {
+            try {
+                await module.stop();
 
-            this.#modules.forEach((module, key) => tasks.push(module.stop().then(() => {
                 logger.info(`Module [${key}] successfully stopped.`);
-            }, (e) => {
+            } catch(e) {
                 logger.error(`Module [${key}] can't stop correct: ${e.stack}`);
-            })));
-
-            await Promise.all(tasks);
-        } catch(e) {
-            logger.error(`Something went wrong: ${e.stack}`);
+            }
         }
+
+        this.#modules.clear();
     }
 }
 

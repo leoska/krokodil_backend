@@ -145,6 +145,8 @@ export default class GameMaster {
             throw new Error(`[Game-Master] Game session with sessionId=${sessionId} already exists`);
         }
 
+        // TODO: сейчас это работает в одном потоке и повесить 1 игровой комнатой можно все остальные
+        // Нужно как-то разграничить их, например, поднимать несколько тредов в помощь
         const gameServer = GameMaster.gameServerFactory(this.#getServerConfig());
         const gameRoom = new GameMaster.gameRoomModule(gameServer, sessionId);
 
@@ -153,5 +155,18 @@ export default class GameMaster {
         await gameRoom.init();
 
         return sessionId;
+    }
+
+    /**
+     * Остановка игровой сессии
+     * 
+     * @async
+     * @public
+     * @param {String} sessionId 
+     * @this GameMaster
+     * @returns {Promise<void>}
+     */
+    async stopGameSession(sessionId) {
+
     }
 }

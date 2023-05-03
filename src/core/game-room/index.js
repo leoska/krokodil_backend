@@ -103,17 +103,22 @@ export default class GameRoom extends EventEmitter {
      * @returns {void}
      */
     async #eventLoop() {
+        const startTime = Date.now();
+
         try {
             this.#dispatchMessageQueue();
 
             await this.tick();
 
             this.#dispathBufferEvents();
-
-            // TODO: добавить замеры выполнения по времени тика и выводить алерт, если тик выполняется больше определенного времени
-            // TODO: возможно стоит тормозить выполнения следующего тика, пока не выполнен текущий
         } catch(e) {
             logger.error(`[${this.constructor.name}] Game room with id: [${this.#roomId}] an error has occured in event loop\n${e.stack}`);
+        } finally {
+            const diffTime = Date.now() - startTime;
+
+            if (diffTime > this.#tickTime) {
+                logger.alert(`[${this.constructor.name}] Game room with id: [${this.#roomId}] `)
+            }
         }
     }
 

@@ -7,7 +7,7 @@ class GRpc extends EventEmitter {
     #calledRpc = {};
     #server = null;
     #options = {
-        host: "localhost:50051",
+        host: "0.0.0.0:50051",
         credentials: grpc.ServerCredentials.createInsecure(),
     };
 

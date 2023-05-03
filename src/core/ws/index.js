@@ -49,6 +49,13 @@ export default class WSServer extends Server {
      */
     #wsClientError(error, socket, request) {
         logger.error(`[WS-Server] Client error: \n${error}`);
+
+        const client = this.getClientBySocket(socket);
+
+        if (!client)
+            return;
+
+        client.close(error.code);
     }
 
     /**

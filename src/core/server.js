@@ -6,6 +6,7 @@ import Protocol from "./protocol/index.js";
 export default class Server extends EventEmitter {
     #buffer = [];
     #clients = new Map();
+    #clientsSockets = new WeakMap();
 
     /**
      * Базовый конструктора сервера
@@ -171,6 +172,7 @@ export default class Server extends EventEmitter {
         const client = new clientClass(id, socket, this);
 
         this.#clients.set(id, client);
+        this.#clientsSockets.set(socket, client);
 
         logger.info(`[${this.constructor.name}] Client with id: [${id}] joined.`);
     }
@@ -223,6 +225,7 @@ export default class Server extends EventEmitter {
         if (!this.#clients.has(clientId)) {
             // throw new Error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
             logger.error(`[${this.constructor.name}] client with id: [${clientId}] not exists!`);
+            return;
         }
 
         const client = this.#clients.get(clientId);
@@ -237,5 +240,19 @@ export default class Server extends EventEmitter {
      */
     existsClient(clientId) {
         return this.#clients.has(clientId);
+    }
+
+    /**
+     * Возвращает Client по socket'у
+     * 
+     * @param {*} socket 
+     * @returns 
+     */
+    getClientBySocket(socket) {
+        if (!this.#clientsSockets.has(socket)) {
+            return null;
+        }
+
+        return this.#clientsSockets.get(socket);
     }
 }

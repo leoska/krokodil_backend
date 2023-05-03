@@ -1,6 +1,8 @@
 import app from "./../../core/app.js";
 import timeout from "./../../utils/timeout.js";
 import logger from "./../../utils/logger.js";
+import http from "./../../core/http/index.js";
+import ConsulModule from "./../../core/consul/index.js";
 
 const EXIT_MAX_WAIT = 10000; // 10 secs
 
@@ -30,6 +32,7 @@ export default async function main() {
 
 
     await app.init([
-
+        http,
+        ConsulModule,
     ]);
 }

@@ -22,6 +22,14 @@ export default class ConsulModule {
         },
     }
 
+    /**
+     * Инициализация подключения к консулу
+     * 
+     * @async
+     * @public
+     * @this ConsulModule
+     * @returns {Promise<void>}
+     */
     async init() {
         this.#consul = new Consul({
             host: config.consul_address,
@@ -39,6 +47,12 @@ export default class ConsulModule {
         logger.info(`[ConsulModule] Successfully service [${this.#options.name}] registered`);
     }
 
+    /**
+     * Остановка модуля
+     * 
+     * @async
+     * @public
+     */
     async stop() {
         clearInterval(this.#intervalChecker);
 
@@ -50,4 +64,6 @@ export default class ConsulModule {
 
         logger.warn(`[ConsulModule] Successfully service [${this.#options.name}] deregistered`);
     }
+
+
 }
