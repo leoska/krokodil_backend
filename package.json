@@ -2,11 +2,15 @@
   "name": "krokodil_backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch-gaming": "nodemon index.js gaming-server",
-    "watch-internal": "nodemon index.js internal-server"
+    "watch-gaming": "nodemon src/index.js gaming-server",
+    "watch-internal": "nodemon src/index.js internal-server",
+    "lint": "npx eslint ./src",
+    "format": "npx eslint --ext js ./src --fix",
+    "prettier-format": "npx prettier --write **/*.js",
+    "prettier-check": "npx prettier --check **/*.js"
   },
   "repository": {
     "type": "git",
@@ -20,8 +24,16 @@
   },
   "homepage": "https://github.com/leoska/krokodil_backend#readme",
   "devDependencies": {
+    "eslint": "^8.40.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsdoc": "^44.2.3",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
     "grpc-tools": "^1.12.4",
-    "nodemon": "^2.0.22"
+    "husky": "^8.0.3",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.8"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.8.13",
@@ -40,5 +52,8 @@
     "uuid": "^9.0.0",
     "winston": "^3.8.2",
     "ws": "^8.13.0"
+  },
+  "engines": {
+    "node": ">=18.14.0"
   }
 }

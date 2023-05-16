@@ -1,8 +1,15 @@
+# Folders
 node_modules
 logs
+dist
+.idea
+.git
 
+# Files
 npm-debug.log
 .gitignore
+jsconfig.json
+tsconfig.json
 buildImage.sh
 docker-compose.yml
 LICENSE

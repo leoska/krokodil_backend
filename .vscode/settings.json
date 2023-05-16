@@ -1,0 +1,18 @@
+{
+    "telemetry.telemetryLevel": "off",
+    "workbench.iconTheme": "vscode-icons",
+    "redhat.telemetry.enabled": false,
+    "terminal.integrated.sendKeybindingsToShell": true,
+    "editor.inlineSuggest.enabled": true,
+    "editor.fontSize": 14,
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "editor.guides.bracketPairs": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true,
+        "source.fixAll.eslint": true,
+    },
+    "editor.formatOnSave": true,
+    "javascript.format.enable": false,
+    "indentRainbow.ignoreErrorLanguages": ["*"],
+    "indentRainbow.colorOnWhiteSpaceOnly": true,
+}

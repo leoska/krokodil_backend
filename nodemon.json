@@ -1,9 +1,13 @@
 {
+    "verbose": true,
     "ignore": [
         "node_modules/*",
         "public/*",
         ".gitignore",
         ".git/*",
         "logs/*"
-    ]
+    ],
+    "execMap": {
+        "ts": "ts-node"
+    }
 }

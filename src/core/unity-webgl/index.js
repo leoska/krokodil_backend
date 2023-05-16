@@ -1,15 +1,13 @@
-
-
 export default class UnityWebgl {
-    constructor() {
+  constructor() {
 
-    }
+  }
 
-    async init() {
+  async init() {
 
-    }
+  }
 
-    async stop() {
+  async stop() {
 
-    }
+  }
 }
