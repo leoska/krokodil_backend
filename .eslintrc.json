@@ -21,7 +21,8 @@
     "rules": {
         "import/extensions": [0, {  "js": "always"  }],
         "max-len": ["error", { "code": 100, "tabWidth": 2, "ignoreComments": true, "ignoreTrailingComments": true }],
-        "no-restricted-syntax": [1, "ForInStatement"]
+        "no-restricted-syntax": [1, "ForInStatement"],
+        "no-await-in-loop": [0]
     },
     "ignorePatterns": [
         ".prettierrc",

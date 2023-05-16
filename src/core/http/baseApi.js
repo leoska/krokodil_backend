@@ -80,13 +80,10 @@ export default class BaseApi {
    * Виртуальное тело метода
    * @public
    * @abstract
-   * @param {object} [params] - Параметры запроса
-   * @param data
-   * @param {object} [body] - Тело запроса
    * @this {BaseApi}
    * @returns {any}
    */
-  async process(data, body) {
+  static async process() {
     throw new Error('Try to call virtual method.');
   }
 

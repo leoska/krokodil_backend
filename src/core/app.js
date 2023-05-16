@@ -71,15 +71,15 @@ class Application {
     this.#appAlreadyStopping = true;
     logger.warn('Received SIGINT signal! Application try to stop.');
 
-    for (const module of this.#modules.items()) {
+    this.#modules.forEach(async (module, name) => {
       try {
         await module.stop();
 
-        logger.info(`Module [${key}] successfully stopped.`);
+        logger.info(`Module [${name}] successfully stopped.`);
       } catch (e) {
-        logger.error(`Module [${key}] can't stop correct: ${e.stack}`);
+        logger.error(`Module [${name}] can't stop correct: ${e.stack}`);
       }
-    }
+    });
 
     this.#modules.clear();
   }

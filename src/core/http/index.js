@@ -22,8 +22,8 @@ function getFileStats(pathFile) {
 
       if (!exists) reject(new Error(`ENOENT: no such file or directory: [${pathFile}]`));
 
-      fsExtra.stat(pathFile, (err, stats) => {
-        if (err) reject(err);
+      fsExtra.stat(pathFile, (statErr, stats) => {
+        if (statErr) reject(statErr);
 
         resolve(stats);
       });
@@ -51,11 +51,10 @@ function readDir(pathDir) {
         if (stats.isDirectory()) {
           const dirApies = await readDir(path.join(pathDir, file));
           Object.assign(apies, dirApies);
-        } else {
-          if (!(/^[^_].*\.js$/.test(file))) continue;
-
+        } else if (/^[^_].*\.js$/.test(file)) {
           const subDirs = pathDir.split('/');
-          const apiName = (pathDir.length ? `${subDirs.join('.')}.` : '') + file.substr(0, file.length - 3);
+          const apiName =
+            (pathDir.length ? `${subDirs.join('.')}.` : '') + file.substr(0, file.length - 3);
 
           const apiModule = (await import(filePath)).default;
 
@@ -169,7 +168,8 @@ export default class HttpServer {
 
     // Listen http-server
     this.#server.listen(options, () => {
-      logger.info(`[HTTP-Server] Successfully started API http-server on ${options.host}:${options.port}`);
+      logger.info(`[HTTP-Server] Successfully started API http-server on \
+      ${options.host}:${options.port}`);
     });
   }
 
@@ -181,9 +181,9 @@ export default class HttpServer {
    * @returns {Promise<void>}
    */
   async stop() {
-    if (this.#server && typeof (this.#server.close) === 'function') return;
+    if (this.#server && typeof this.#server.close === 'function') return;
 
-    return await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       try {
         this.#server.close(() => {
           logger.info('[HTTP-Server] Successfully stopped.');
