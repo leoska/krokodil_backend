@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch-gaming": "nodemon src/index.js gaming-server",
-    "watch-internal": "nodemon src/index.js internal-server",
+    "watch-gaming": "nodemon --experimental-loader src/index.js gaming-server",
+    "watch-internal": "nodemon --experimental-loader src/index.js internal-server",
     "lint": "npx eslint ./src",
     "format": "npx eslint --ext js ./src --fix",
     "prettier-format": "npx prettier --write **/*.js",

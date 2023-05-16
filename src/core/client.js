@@ -66,7 +66,7 @@ export default class Client extends EventEmitter {
    * @param {*} err
    * @returns {void}
    */
-  error(err) {
+  static error(err) {
     const code = err.code ? `code: ${err.code}` : '';
     logger.error(`Client an error has occured. ${code}\n${err.stack}`);
     throw err;

@@ -1,8 +1,8 @@
 /**
  * Функция обработчик таймаута
- * @param {number} ms
- * @param {boolean} [safe]
- * @returns {Promise<Error>}
+ * @param {number} ms - Время в милисекундах
+ * @param {boolean} [safe] - Безопасный таймаут (без ошибки)
+ * @returns {Promise<Error>} - Возвращает промис, возможно с результатом ошибки в зависимости от параметра [safe]
  */
 export default function timeout(ms, safe = false) {
   return new Promise((resolve, reject) => {

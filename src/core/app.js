@@ -39,13 +39,13 @@ class Application {
    * @returns {Promise<void>}
    */
   async init(modules) {
-    for (const module of modules) {
-      logger.info(`Start initialize module [${module.name}]`);
+    for (const Module of modules) {
+      logger.info(`Start initialize module [${Module.name}]`);
 
-      const instanceOfModule = new module();
-      this.#modules.set(module.name.toLowerCase(), instanceOfModule);
+      const instanceOfModule = new Module();
+      this.#modules.set(Module.name.toLowerCase(), instanceOfModule);
 
-      Object.defineProperty(this, module.name.toLowerCase(), {
+      Object.defineProperty(this, Module.name.toLowerCase(), {
         value: instanceOfModule,
         writable: false,
         configurable: false,
@@ -54,7 +54,7 @@ class Application {
 
       await instanceOfModule.init();
 
-      logger.info(`Module [${module.name}] successfully initialized`);
+      logger.info(`Module [${Module.name}] successfully initialized`);
     }
   }
 

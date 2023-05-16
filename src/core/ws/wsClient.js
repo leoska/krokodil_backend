@@ -1,4 +1,3 @@
-import logger from '../../utils/logger.js';
 import Client from '../client.js';
 
 export default class WSClient extends Client {

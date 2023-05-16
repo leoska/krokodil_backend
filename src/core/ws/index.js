@@ -1,4 +1,7 @@
 import { WebSocketServer } from 'ws';
+import http from 'node:http';
+import net from 'node:net';
+import tls from 'node:tls';
 import logger from '../../utils/logger.js';
 import WSClient from './wsClient.js';
 import Server from '../server.js';
@@ -44,8 +47,10 @@ export default class WSServer extends Server {
    * @param {Error} error
    * @param {net.Socket|tls.Socket} socket
    * @param {http.IncomingMessage} request
+   * @returns {void}
    */
-  #wsClientError(error, socket, request) {
+
+  #wsClientError(error, socket) {
     logger.error(`[WS-Server] Client error: \n${error}`);
 
     const client = this.getClientBySocket(socket);

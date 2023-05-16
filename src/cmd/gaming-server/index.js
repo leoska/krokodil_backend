@@ -1,4 +1,4 @@
-import app from '../../core/app.ts';
+import app from '../../core/app.js';
 import timeout from '../../utils/timeout.js';
 import logger from '../../utils/logger.js';
 import http from '../../core/http/index.js';
@@ -11,16 +11,11 @@ const EXIT_MAX_WAIT = 10000; // 10 secs
 
 process.once('SIGINT', async () => {
   try {
-    await Promise.race([
-      app.stop(),
-      timeout(EXIT_MAX_WAIT),
-    ]);
-
+    await Promise.race([app.stop(), timeout(EXIT_MAX_WAIT)]);
     logger.info('Application successfully stopped.');
-    process.exit(0);
   } catch (e) {
     logger.error(`Application can't stop correct: ${e}`);
-    process.exit(1);
+    throw e;
   }
 });
 
@@ -32,15 +27,11 @@ process.once('SIGINT', async () => {
  */
 export default async function main() {
   gm.newGameRoom = KrokodilRoom;
-  gm.serverFactory = function (options) {
+  gm.serverFactory = function serverFactory(options) {
     return new WSServer(options);
   };
 
-  await app.init([
-    ConsulModule,
-    gm,
-    http,
-  ]);
+  await app.init([ConsulModule, gm, http]);
 
   await app.gamemaster.createGameSession();
 }

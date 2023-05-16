@@ -1,3 +1,4 @@
+/* eslint-disable */
 import ErrorApiMethod from '../core/http/errorApiMethod.js';
 
 /**

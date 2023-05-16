@@ -1,6 +1,7 @@
 /**
- *
- * @param object
+ * Возвращает размер измеряемого объекта в байтах
+ * @param {any} object - объект, который будет измеряться
+ * @returns {number} - размер измеряемого объекта
  */
 export default function roughSizeOfObject(object) {
   const objectList = [];
@@ -20,7 +21,9 @@ export default function roughSizeOfObject(object) {
       objectList.push(value);
 
       for (const i in value) {
-        stack.push(value[i]);
+        if (Object.hasOwn(value, i)) {
+          stack.push(value[i]);
+        }
       }
     }
   }

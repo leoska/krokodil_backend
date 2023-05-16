@@ -101,7 +101,7 @@ export default class BaseApi {
     return {
       response: await Promise.race([
         timeout(API_TIMEOUT),
-        this.process(this._params || {}, this._body || {}),
+        this.process(this.#params || {}, this.#body || {}),
       ]),
     };
   }
