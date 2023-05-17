@@ -3,7 +3,10 @@ import path from 'node:path';
 import GameRoom from '../../core/game-room/index.js';
 import logger from '../../utils/logger.js';
 import createEnum from '../../utils/enum.js';
-import eventsMap from './eventsMap.json';
+
+const eventsMap = JSON.parse(
+  fs.readFileSync(path.join(path.resolve(), 'src', 'projects', 'krokodil', 'eventsMap.json')),
+);
 
 const AMOUNT_PLAYERS_SESSION = 2; // 4
 
