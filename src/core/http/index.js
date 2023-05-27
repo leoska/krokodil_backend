@@ -7,8 +7,6 @@ import logger from '../../utils/logger.js';
 const DEFAULT_HTTP_HOST = '0.0.0.0';
 const DEFAULT_HTTP_PORT = 8080;
 
-const __dirname = path.resolve();
-
 /**
  * Функция для возврата свойств файла/папки
  * @param {string} pathFile
@@ -53,8 +51,8 @@ function readDir(pathDir) {
           Object.assign(apies, dirApies);
         } else if (/^[^_].*\.js$/.test(file)) {
           const subDirs = pathDir.split('/');
-          const apiName =
-            (pathDir.length ? `${subDirs.join('.')}.` : '') + file.substr(0, file.length - 3);
+          const apiDirs = pathDir.length ? `${subDirs.join('.')}.` : '';
+          const apiName = apiDirs + file.substr(0, file.length - 3);
 
           const apiModule = (await import(filePath)).default;
 
@@ -121,7 +119,7 @@ export default class HttpServer {
    */
   async #initApi() {
     for (const pathDir of this.constructor.apiDirs) {
-      const pathToRead = path.join(__dirname, 'src', pathDir);
+      const pathToRead = path.join(path.resolve(), 'src', pathDir);
       const resultApies = await readDir(pathToRead);
       Object.assign(this.#api, resultApies);
     }

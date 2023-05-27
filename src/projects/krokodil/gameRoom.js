@@ -3,6 +3,8 @@ import path from 'node:path';
 import GameRoom from '../../core/game-room/index.js';
 import logger from '../../utils/logger.js';
 import createEnum from '../../utils/enum.js';
+import Client from '../../core/client.js';
+import Server from '../../core/server.js';
 
 const eventsMap = JSON.parse(
   fs.readFileSync(path.join(path.resolve(), 'src', 'projects', 'krokodil', 'eventsMap.json')),
@@ -77,21 +79,20 @@ export default class KrokodilRoom extends GameRoom {
   /**
    * Конструктор игровой комнаты крокодила
    * @class
-   * @param {Server} server
-   * @param {string} roomId
-   * @param  {...any} args
+   * @param {Server} server - Экземпляр класса сервер
+   * @param {string} roomId - Идентификатор игровой сессии
    */
-  constructor(server = null, roomId = '', ...args) {
+  constructor(server = null, roomId = '') {
     super(server, roomId, DEFAULT_TICK_RATE, eventsMap);
 
     // Server Events
     server.on('disconnect', (client) => this.#disconnect(client));
 
     // Game Events
-    this.on('connected', (...args) => this.#connected(...args));
-    this.on('disconnectForce', (...args) => this.#disconnectForce(...args));
-    this.on('draw', (...args) => this.#draw(...args));
-    this.on('chat', (...args) => this.#chat(...args));
+    this.on('connected', (...argsСon) => this.#connected(...argsСon));
+    this.on('disconnectForce', (...argsDis) => this.#disconnectForce(...argsDis));
+    this.on('draw', (...argsDraw) => this.#draw(...argsDraw));
+    this.on('chat', (...argsChat) => this.#chat(...argsChat));
     // this.on("selectWord",  (...args) => this.#selectWord(...args));
   }
 
@@ -114,17 +115,15 @@ export default class KrokodilRoom extends GameRoom {
 
   /**
    * Событие подключение игрока
-   * @param {object} data
-   * @param {number} stamp
-   * @param {Client} client
-   * @param data."0"
-   * @param data."1"
-   * @param data."2"
+   * @param {[object, number, Client]} data - массив из 3 значений: данные пакета, время отправки и экземпляр класса Клиента
+   * @returns {void}
    */
+  // eslint-disable-next-line no-unused-vars
   #connected([data, stamp, client]) {
     this.players[client.id] = client;
 
-    if (++this.amountPlayers >= AMOUNT_PLAYERS_SESSION) {
+    this.amountPlayers += 1;
+    if (this.amountPlayers >= AMOUNT_PLAYERS_SESSION) {
       if (this.gameState === DEFAULT_GAME_STATE.WAITING) {
         this.#selectWordState();
       } else if (this.gameState === DEFAULT_GAME_STATE.PLAYING) {
@@ -155,11 +154,13 @@ export default class KrokodilRoom extends GameRoom {
   #disconnect(client) {
     delete this.players[client.id];
 
+    this.amountPlayers -= 1;
+
     // Остановка игры, рисующий игрок вышел
-    if (
-      this.playerDrawing === client.id ||
-      (--this.amountPlayers < 2 && this.gameState === DEFAULT_GAME_STATE.PLAYING)
-    ) {
+    const isDrawingPlayer = this.playerDrawing === client.id;
+    const lessTwoPlayers = this.amountPlayers < 2;
+    const isPlaying = this.gameState === DEFAULT_GAME_STATE.PLAYING;
+    if (isDrawingPlayer || (lessTwoPlayers && isPlaying)) {
       this.#finishState();
     } else {
       // TODO: потом доделать отключение клиента
@@ -170,12 +171,7 @@ export default class KrokodilRoom extends GameRoom {
   /**
    * Событие отрисовки в комнате
    * @private
-   * @param {object} data
-   * @param {number} stamp
-   * @param data."0"
-   * @param data."1"
-   * @param data."2"
-   * @param {Client} client
+   * @param {[object, number, Client]} data - массив из 3 значений: данные пакета, время отправки и экземпляр класса Клиента
    * @this KrokodilRoom
    * @returns {void}
    */
@@ -188,12 +184,7 @@ export default class KrokodilRoom extends GameRoom {
   /**
    * Событие чата
    * @private
-   * @param {object} data
-   * @param {number} stamp
-   * @param data."0"
-   * @param data."1"
-   * @param data."2"
-   * @param {Client} client
+   * @param {[object, number, Client]} data - массив из 3 значений: данные пакета, время отправки и экземпляр класса Клиента
    * @this KrokodilRoom
    * @returns {void}
    */
@@ -212,12 +203,7 @@ export default class KrokodilRoom extends GameRoom {
   /**
    * Событие выбора слова
    * @private
-   * @param {object} data
-   * @param {number} stamp
-   * @param data."0"
-   * @param data."1"
-   * @param data."2"
-   * @param {Client} client
+   * @param {[object, number, Client]} data - массив из 3 значений: данные пакета, время отправки и экземпляр класса Клиента
    * @this KrokodilRoom
    * @returns {void}
    */
@@ -266,15 +252,13 @@ export default class KrokodilRoom extends GameRoom {
     this.playerDrawing = getRandomPlayer(this.players);
 
     for (const id of Object.keys(this.players)) {
-      setTimeout(
-        () =>
-          this.send(
-            'selectWord',
-            { draw: Number(id) === Number(this.playerDrawing), word: this.word },
-            Number(id),
-          ),
-        50,
-      );
+      setTimeout(() => {
+        this.send(
+          'selectWord',
+          { draw: Number(id) === Number(this.playerDrawing), word: this.word },
+          Number(id),
+        );
+      }, 50);
     }
 
     this.gameState = DEFAULT_GAME_STATE.PLAYING;
@@ -305,10 +289,4 @@ export default class KrokodilRoom extends GameRoom {
   async firstTick() {
     logger.info(`[KrokodilRoom (${this.id})] Started playing. Waiting for players.`);
   }
-
-  /**
-   * Каждый "кадр" игровой комнаты.
-   * Вызывается каждый тик.
-   */
-  async tick() {}
 }
